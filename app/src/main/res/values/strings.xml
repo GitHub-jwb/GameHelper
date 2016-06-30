@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">游戏助手</string>
+    <string name="agreeReg">我已阅读并接受<a href="gamehelper://">注册协议</a></string>
+</resources>
