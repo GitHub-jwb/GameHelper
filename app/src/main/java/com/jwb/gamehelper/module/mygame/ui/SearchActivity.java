@@ -1,9 +1,12 @@
 package com.jwb.gamehelper.module.mygame.ui;
 
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -11,9 +14,13 @@ import com.jwb.gamehelper.R;
 import com.jwb.gamehelper.base.BaseActivity;
 import com.jwb.gamehelper.base.ListViewCallBack;
 import com.jwb.gamehelper.common.adapter.CommonAdapter;
+import com.jwb.gamehelper.common.adapter.RecAdapter;
 import com.jwb.gamehelper.common.adapter.ViewHolder;
+import com.jwb.gamehelper.module.mygame.bean.LikeGameInfo;
 import com.jwb.gamehelper.module.mygame.bean.MyAllGameInfo;
+import com.jwb.gamehelper.module.mygame.dao.LikeGameDao;
 import com.jwb.gamehelper.module.mygame.dao.MyAllGameDao;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +34,10 @@ public class SearchActivity extends BaseActivity {
     private ImageView mivSearchLogo;
     private EditText mEdtInput;
     private String mInputContent=null;
+    private RecyclerView mRvLikeGames;
+    List<LikeGameInfo.InfoBean> mLikeGameDatas;
+    private RecAdapter<LikeGameInfo.InfoBean> mRecAdapter;
+    private LinearLayout mLikeLayout;
 
     @Override
     public int setViewId() {
@@ -39,12 +50,16 @@ public class SearchActivity extends BaseActivity {
         mlvSearchResult = (ListView) findViewById(R.id.lv_search_result);
         mivSearchLogo = (ImageView) findViewById(R.id.iv_search_logo);
         mEdtInput = (EditText) findViewById(R.id.et_search);
+        mRvLikeGames = (RecyclerView) findViewById(R.id.recyclerview);
+        //获得猜你喜欢布局控件对象。
+        mLikeLayout = (LinearLayout) findViewById(R.id.like_layout);
     }
 
     @Override
     public void init() {
 
         mlistDatas = new ArrayList<>();
+        mLikeGameDatas=new ArrayList<>();
         mAdapter = new CommonAdapter<MyAllGameInfo.InfoBean>(this,
                 mlistDatas,
                 R.layout.layout_money_mygame_item
@@ -63,6 +78,22 @@ public class SearchActivity extends BaseActivity {
         };
         //给listView设置适配器
         mlvSearchResult.setAdapter(mAdapter);
+
+        mRecAdapter = new RecAdapter<>(this,
+                mLikeGameDatas,
+                new RecAdapter.RecCallBack() {
+                    @Override
+                    public void convert(RecAdapter.ViewHolder viewHolder, List mDatas, int position) {
+                        Picasso.with(SearchActivity.this).load(mLikeGameDatas.get(position).getIcon()).into(viewHolder.mImg);
+                        viewHolder.mTxt1.setText(mLikeGameDatas.get(position).getName());
+                        viewHolder.mTxt2.setText(mLikeGameDatas.get(position).getCount_dl()+"人下载");
+                    }
+                });
+        //设置布局管理器
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        linearLayoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
+        mRvLikeGames.setLayoutManager(linearLayoutManager);
+        mRvLikeGames.setAdapter(mRecAdapter);
     }
 
     @Override
@@ -72,8 +103,7 @@ public class SearchActivity extends BaseActivity {
             public void onClick(View view) {
                 //获得搜索输入的内容
                 mInputContent = mEdtInput.getText().toString();
-                mlistDatas.clear();
-                loadData();
+                loadSearchGameResult();
             }
         });
         mlvSearchResult.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -83,13 +113,22 @@ public class SearchActivity extends BaseActivity {
             }
         });
     }
+    private void loadLikeGameData(){
+        mLikeGameDatas.clear();
+        LikeGameDao.getLikeGameData(new ListViewCallBack() {
+            @Override
+            public void updateListView(Object object) {
+                List<LikeGameInfo.InfoBean> list= (List<LikeGameInfo.InfoBean>) object;
+                mLikeGameDatas.addAll(list);
+                mRecAdapter.notifyDataSetChanged();
+                //显示
+                mLikeLayout.setVisibility(View.VISIBLE);
+            }
+        });
+    }
 
-    @Override
-    public void loadData() {
-        //如果搜索输入的内容为空，则不进行数据检索
-        if(mInputContent==null||mInputContent.equals("")){
-            return;
-        }
+    private void loadSearchGameResult(){
+        mlistDatas.clear();
         MyAllGameDao.getSearchGameResult(mInputContent, new ListViewCallBack() {
             @Override
             public void updateListView(Object object) {
@@ -98,6 +137,12 @@ public class SearchActivity extends BaseActivity {
                 mAdapter.notifyDataSetChanged();
             }
         });
+    }
+    @Override
+    public void loadData() {
+        //加载喜欢的游戏数据
+        loadLikeGameData();
+
     }
     //点击返回图标执行的方法
     public void clickBack(View view) {

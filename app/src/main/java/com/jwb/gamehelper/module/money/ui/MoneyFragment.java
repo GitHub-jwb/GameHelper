@@ -33,6 +33,7 @@ public class MoneyFragment extends BaseFragment {
     private ListView mlvGame;
     private CommonAdapter<TaskGameInfo.InfoBean> mAdapter;
 
+    //开启PopupWindow
     public void showLoadDialog() {
         if (!isLoadOk && (mpopWd == null)) {
             mpopWd = new PopupWindow(mviewPw,
@@ -40,12 +41,14 @@ public class MoneyFragment extends BaseFragment {
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                     false);
             mpopWd.showAtLocation(mfmView, Gravity.CENTER, 0, 0);
+            //设置透明
             WindowManager.LayoutParams params = getActivity().getWindow().getAttributes();
             params.alpha=0.5f;
             getActivity().getWindow().setAttributes(params);
         }
     }
 
+    //关闭PopupWindow.
     public void coloseLoadDialog() {
         isLoadOk=true;
         if (mpopWd != null) {

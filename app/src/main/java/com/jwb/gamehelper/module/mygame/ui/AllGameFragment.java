@@ -23,7 +23,7 @@ public class AllGameFragment extends BaseFragment {
 
 
     private PullToRefreshListView mrlvGame;
-    private int miCurPage =1;
+    private int miCurPage =1;//记录加载数据页数
     private CommonAdapter<MyAllGameInfo.InfoBean> mAdapter;
     private List<MyAllGameInfo.InfoBean> mlistGames;
 
